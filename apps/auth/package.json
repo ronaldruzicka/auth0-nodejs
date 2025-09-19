@@ -1,0 +1,31 @@
+{
+	"name": "auth",
+	"version": "1.0.0",
+	"description": "",
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": "./dist/index.mjs",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"build": "pkgroll",
+		"format": "prettier --write .",
+		"lint": "eslint --max-warnings 0 .",
+		"check-types": "tsc --noEmit"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"engines": {
+		"node": ">=22.0.0"
+	},
+	"dependencies": {
+		"express": "^5.1.0"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.3",
+		"@types/node": "^22.15.3",
+		"pkgroll": "^2.15.4",
+		"tsx": "^4.20.5",
+		"typescript": "^5.9.2"
+	}
+}
