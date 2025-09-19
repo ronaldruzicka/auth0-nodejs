@@ -6,11 +6,12 @@
 	"main": "./src/index.ts",
 	"exports": "./dist/index.mjs",
 	"scripts": {
-		"dev": "tsx watch src/index.ts",
+		"dev": "tsx watch --env-file=.env src/index.ts --port=4040",
 		"build": "pkgroll",
 		"format": "prettier --write .",
 		"lint": "eslint --max-warnings 0 .",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsc --noEmit",
+		"test": "tsx --env-file=.env.test --test"
 	},
 	"keywords": [],
 	"author": "",
@@ -19,7 +20,9 @@
 		"node": ">=22.0.0"
 	},
 	"dependencies": {
-		"express": "^5.1.0"
+		"express": "^5.1.0",
+		"express-openid-connect": "^2.19.2",
+		"valibot": "^0.31.1"
 	},
 	"devDependencies": {
 		"@types/express": "^5.0.3",
