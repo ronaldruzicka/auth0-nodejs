@@ -22,6 +22,7 @@
 		"noUncheckedIndexedAccess": true,
 		"exactOptionalPropertyTypes": true,
 		"allowImportingTsExtensions": true,
+		"noEmit": true,
 
 		// Style Options
 		"noImplicitReturns": true,
@@ -33,7 +34,7 @@
 
 		// Recommended Options
 		"strict": true,
-		"verbatimModuleSyntax": true,
+		"verbatimModuleSyntax": false,
 		"isolatedModules": true,
 		"noUncheckedSideEffectImports": true,
 		"moduleDetection": "force",
