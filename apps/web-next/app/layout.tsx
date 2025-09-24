@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 
 const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:3000';
 const RETURN_TO = process.env.NEXT_PUBLIC_APP_BASE_URL || 'http://localhost:4040';
-const LOGIN_URL = `${AUTH_API}/login?returnTo=${encodeURIComponent(RETURN_TO)}`;
-const LOGOUT_URL = `${AUTH_API}/logout?returnTo=${encodeURIComponent(RETURN_TO)}`;
+const LOGIN_URL = `${AUTH_API}/auth/login?returnTo=${encodeURIComponent(RETURN_TO)}`;
+const LOGOUT_URL = `${AUTH_API}/auth/logout?returnTo=${encodeURIComponent(RETURN_TO)}`;
 
 export default async function RootLayout({
 	children,
