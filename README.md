@@ -35,7 +35,7 @@ This Turborepo has some additional tools already setup for you:
 
 ### Develop
 
-To develop all apps and packages, run the following command:
+To run apps development:
 
 ```
 pnpm dev:auth
