@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:3000';
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_BASE_URL || 'http://localhost:4040';
 const RETURN_TO = `${APP_BASE_URL}/dashboard`;
-const LOGIN_URL = `${AUTH_API}/login?returnTo=${encodeURIComponent(RETURN_TO)}`;
+const LOGIN_URL = `${AUTH_API}/auth/login?returnTo=${encodeURIComponent(RETURN_TO)}`;
 
 export default async function DashboardPage() {
 	const session = await getSession();
