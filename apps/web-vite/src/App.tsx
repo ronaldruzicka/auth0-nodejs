@@ -2,7 +2,8 @@ import { User } from '@auth0/auth0-react';
 import { useCallback, useEffect, useState } from 'react';
 import auth0 from './assets/auth0.svg';
 
-const authURL = import.meta.env.VITE_AUTH_URL;
+const serverUrl = import.meta.env.VITE_AUTH_URL;
+const authApiUrl = `${serverUrl}/auth`;
 
 function App() {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,7 +13,7 @@ function App() {
 
 	const fetchSession = useCallback(async () => {
 		try {
-			const res = await fetch(`${authURL}/session`, {
+			const res = await fetch(`${serverUrl}/public`, {
 				credentials: 'include',
 			});
 
@@ -22,7 +23,7 @@ function App() {
 
 			const data = await res.json();
 
-			setIsAuthenticated(Boolean(data.authenticated));
+			setIsAuthenticated(Boolean(data.isLoggedIn));
 			setAuthUser(data.user ?? null);
 		} catch (err) {
 			console.error(err);
@@ -38,7 +39,7 @@ function App() {
 
 	const fetchProfile = useCallback(async () => {
 		try {
-			const res = await fetch(`${authURL}/profile`, {
+			const res = await fetch(`${serverUrl}/private`, {
 				credentials: 'include',
 			});
 
@@ -89,7 +90,7 @@ function App() {
 					{!loading && isAuthenticated && (
 						<a
 							// onClick={handleLogout}
-							href={`${authURL}/logout?returnTo=${encodeURIComponent(window.location.origin)}`}
+							href={`${authApiUrl}/logout?returnTo=${encodeURIComponent(window.location.origin)}`}
 							className="rounded-md bg-gradient-to-r from-slate-700 to-slate-600 px-5 py-2 text-sm font-medium text-slate-100 shadow-sm ring-1 ring-inset ring-slate-700 transition hover:from-slate-600 hover:to-slate-500"
 						>
 							Logout
@@ -98,7 +99,7 @@ function App() {
 					{!loading && !isAuthenticated && (
 						<a
 							// onClick={handleLogin}
-							href={`${authURL}/login?returnTo=${encodeURIComponent(window.location.origin)}`}
+							href={`${authApiUrl}/login?returnTo=${encodeURIComponent(window.location.origin)}`}
 							className="relative overflow-hidden rounded-md bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
 						>
 							Login
