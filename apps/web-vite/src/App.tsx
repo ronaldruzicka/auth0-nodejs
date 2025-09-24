@@ -62,14 +62,6 @@ function App() {
 		}
 	}, []);
 
-	// const handleLogin = async () => {
-	// 	await loginWithRedirect();
-	// };
-
-	// const handleLogout = async () => {
-	// 	await logout({ logoutParams: { returnTo: window.location.origin } });
-	// };
-
 	return (
 		<div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 font-sans text-slate-100">
 			<header className="sticky top-0 z-40 flex w-full items-center justify-between gap-6 border-b border-slate-700 bg-slate-900/70 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60">
@@ -106,7 +98,7 @@ function App() {
 					{!loading && !isAuthenticated && (
 						<a
 							// onClick={handleLogin}
-							href={`${authURL}/login`}
+							href={`${authURL}/login?returnTo=${encodeURIComponent(window.location.origin)}`}
 							className="relative overflow-hidden rounded-md bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
 						>
 							Login

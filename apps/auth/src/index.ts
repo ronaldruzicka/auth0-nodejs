@@ -19,6 +19,7 @@ const config = {
 		rolling: true,
 		absoluteDuration: 60 * 60 * 8, // 8 hours
 		cookie: {
+			httpOnly: true,
 			sameSite: 'Lax',
 			// In production you MUST use HTTPS and secure: true.
 			secure: process.env['NODE_ENV'] !== 'development',
@@ -26,6 +27,7 @@ const config = {
 	},
 	routes: {
 		login: false, // we will handle login manually to set returnTo dynamically
+		logout: false, // we will handle login manually to set returnTo dynamically
 		postLogoutRedirect: 'http://localhost:5173',
 	},
 } satisfies ConfigParams;
@@ -34,11 +36,12 @@ const app = express();
 
 app.use(helmet());
 
-const CLIENT_APP = 'http://localhost:5173';
+// Allow both the Vite app and the Next.js app during local development.
+const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4040'];
 
 app.use(
 	cors({
-		origin: 'http://localhost:5173',
+		origin: ALLOWED_ORIGINS,
 		credentials: true,
 	}),
 );
@@ -47,12 +50,12 @@ app.use(
 app.use(auth(config));
 
 app.get('/', (req, res) => {
-	return res.json({ authenticated: req.oidc.isAuthenticated(), user: req.oidc.user || null });
+	return res.json({ isAuthenticated: req.oidc.isAuthenticated(), user: req.oidc.user || null });
 });
 
 // Session introspection endpoint used by the React client to determine auth state.
 app.get('/session', (req, res) => {
-	res.json({ authenticated: req.oidc.isAuthenticated(), user: req.oidc.user || null });
+	res.json({ isAuthenticated: req.oidc.isAuthenticated(), user: req.oidc.user || null });
 });
 
 // Returns the full user profile (protected)
@@ -61,10 +64,29 @@ app.get('/profile', requiresAuth(), (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-	return res.oidc.login({
-		// After successful auth, send user back to the Vite app
-		returnTo: 'http://localhost:5173',
-	});
+	// Allow caller to specify a desired returnTo (must be in whitelist) ?returnTo=<encoded>
+	const maybeParam = req.query['returnTo'];
+	const requested = typeof maybeParam === 'string' ? maybeParam : undefined;
+
+	const returnTo =
+		requested && ALLOWED_ORIGINS.some((origin) => requested?.includes(origin))
+			? requested
+			: 'http://localhost:3000';
+
+	return res.oidc.login({ returnTo });
+});
+
+app.get('/logout', (req, res) => {
+	// Allow caller to specify a desired returnTo (must be in whitelist) ?returnTo=<encoded>
+	const maybeParam = req.query['returnTo'];
+	const requested = typeof maybeParam === 'string' ? maybeParam : undefined;
+
+	const returnTo =
+		requested && ALLOWED_ORIGINS.some((origin) => requested?.includes(origin))
+			? requested
+			: 'http://localhost:3000';
+
+	return res.oidc.logout({ returnTo });
 });
 
 const port = resolvedPort();
