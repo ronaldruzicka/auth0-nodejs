@@ -1,10 +1,33 @@
-import type { Request, Response, NextFunction } from 'express';
-import express from 'express';
-import { CookieTransactionStore, ServerClient, StatelessStateStore } from '@auth0/auth0-server-js';
-import { StoreOptions } from './types.js';
-import { ExpressCookieHandler } from './store/express-cookie-handler.js';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import fp from 'fastify-plugin';
+import { ServerClient, CookieTransactionStore, StatelessStateStore } from '@auth0/auth0-server-js';
+import type { StoreOptions } from './types.js';
+import { FastifyCookieHandler } from './store/fastify-cookie-handler.js';
 
-export interface Auth0ExpressOptions {
+export const ALLOWED_ORIGINS = ['http://localhost:5173'];
+
+export function getReturnTo(
+	request: FastifyRequest<{ Querystring: { returnTo?: string } }>,
+	options: Auth0FastifyOptions,
+) {
+	const returnToParam = request.query['returnTo'];
+	const requested = typeof returnToParam === 'string' ? returnToParam : undefined;
+
+	const returnTo =
+		requested && ALLOWED_ORIGINS.some((origin) => requested?.includes(origin))
+			? requested
+			: options.appBaseUrl;
+
+	return returnTo;
+}
+
+declare module 'fastify' {
+	interface FastifyInstance {
+		auth0Client: ServerClient<StoreOptions> | undefined;
+	}
+}
+
+export interface Auth0FastifyOptions {
 	domain: string;
 	clientId: string;
 	clientSecret: string;
@@ -12,15 +35,12 @@ export interface Auth0ExpressOptions {
 	sessionSecret: string;
 }
 
-declare module 'express' {
-	interface Request {
-		auth0Client: ServerClient<StoreOptions>;
-	}
-}
+type WithReturnTo = FastifyRequest<{ Querystring: { returnTo?: string } }>;
 
-export const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4040'];
-
-export function auth0(options: Auth0ExpressOptions) {
+export default fp(async function auth0Fastify(
+	fastify: FastifyInstance,
+	options: Auth0FastifyOptions,
+) {
 	const callbackPath = '/auth/callback';
 	const redirectUri = new URL(callbackPath, options.appBaseUrl);
 
@@ -35,71 +55,52 @@ export function auth0(options: Auth0ExpressOptions) {
 			{
 				secret: options.sessionSecret,
 			},
-			new ExpressCookieHandler(),
+			new FastifyCookieHandler(),
 		),
 		stateStore: new StatelessStateStore(
 			{
 				secret: options.sessionSecret,
 			},
-			new ExpressCookieHandler(),
+			new FastifyCookieHandler(),
 		),
 	});
 
-	const router = new express.Router();
+	fastify.get('/auth/login', async (request: WithReturnTo, reply) => {
+		const returnTo = getReturnTo(request, options);
 
-	router.use(async (req: Request, _res: Response, next: NextFunction) => {
-		req.auth0Client = auth0Client;
-		next();
-	});
+		console.log('💬 ~ auth0Fastify ~ returnTo:', returnTo);
 
-	router.get('/auth/login', async (request: Request, response: Response) => {
-		const returnToParam = request.query['returnTo'];
-		const requested = typeof returnToParam === 'string' ? returnToParam : undefined;
-
-		const returnTo =
-			requested && ALLOWED_ORIGINS.some((origin) => requested?.includes(origin))
-				? requested
-				: options.appBaseUrl;
-
-		const authorizationUrl = await request.auth0Client.startInteractiveLogin(
+		const authorizationUrl = await auth0Client.startInteractiveLogin(
 			{
 				appState: { returnTo },
 			},
-			{ request, response },
+			{ request, reply },
 		);
 
-		response.redirect(authorizationUrl.href);
+		reply.redirect(authorizationUrl.href);
 	});
 
-	router.get('/auth/callback', async (request: Request, response: Response) => {
-		console.log('💬 ~ newURL:', new URL(request.url, options.appBaseUrl).toString());
-
-		const { appState, authorizationDetails } = await request.auth0Client.completeInteractiveLogin<
+	fastify.get('/auth/callback', async (request, reply) => {
+		const { appState } = await auth0Client.completeInteractiveLogin<
 			{ returnTo: string } | undefined
-		>(new URL(request.url, options.appBaseUrl), { request, response });
+		>(new URL(request.url, options.appBaseUrl), { request, reply });
 
-		console.log('💬 ~ appState:', appState);
-		console.log('💬 ~ authorizationDetails:', authorizationDetails);
-
-		response.redirect(appState?.returnTo ?? options.appBaseUrl);
+		console.log('💬 ~ auth0Fastify ~ appState:', appState);
+		reply.redirect(appState?.returnTo ?? options.appBaseUrl);
 	});
 
-	router.get('/auth/logout', async (request: Request, response: Response) => {
-		const returnToParam = request.query['returnTo'];
-		const requested = typeof returnToParam === 'string' ? returnToParam : undefined;
+	fastify.get('/auth/logout', async (request: WithReturnTo, reply) => {
+		const returnTo = getReturnTo(request, options);
 
-		const returnTo =
-			requested && ALLOWED_ORIGINS.some((origin) => requested?.includes(origin))
-				? requested
-				: options.appBaseUrl;
+		console.log('💬 ~ auth0Fastify ~ returnTo:', returnTo);
 
-		const logoutUrl = await request.auth0Client.logout(
+		const logoutUrl = await auth0Client.logout(
 			{ returnTo: returnTo.toString() },
-			{ request, response },
+			{ request, reply },
 		);
 
-		response.redirect(logoutUrl.href);
+		reply.redirect(logoutUrl.href);
 	});
 
-	return router;
-}
+	fastify.decorate('auth0Client', auth0Client);
+});

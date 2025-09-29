@@ -1,7 +1,7 @@
 import { CookieHandler, CookieSerializeOptions } from '@auth0/auth0-server-js';
 import { StoreOptions } from '../types';
 
-export class ExpressCookieHandler implements CookieHandler<StoreOptions> {
+export class FastifyCookieHandler implements CookieHandler<StoreOptions> {
 	setCookie(
 		name: string,
 		value: string,
@@ -12,7 +12,7 @@ export class ExpressCookieHandler implements CookieHandler<StoreOptions> {
 			throw new Error('StoreOptions not provided');
 		}
 
-		storeOptions.response.cookie(name, value, options || {});
+		storeOptions.reply.setCookie(name, value, options || {});
 	}
 
 	getCookie(name: string, storeOptions?: StoreOptions): string | undefined {
@@ -20,7 +20,7 @@ export class ExpressCookieHandler implements CookieHandler<StoreOptions> {
 			throw new Error('StoreOptions not provided');
 		}
 
-		return storeOptions.request.cookies[name];
+		return storeOptions.request.cookies?.[name];
 	}
 
 	getCookies(storeOptions?: StoreOptions): Record<string, string> {
@@ -28,7 +28,7 @@ export class ExpressCookieHandler implements CookieHandler<StoreOptions> {
 			throw new Error('StoreOptions not provided');
 		}
 
-		return storeOptions.request.cookies;
+		return storeOptions.request.cookies as Record<string, string>;
 	}
 
 	deleteCookie(name: string, storeOptions?: StoreOptions): void {
@@ -36,6 +36,6 @@ export class ExpressCookieHandler implements CookieHandler<StoreOptions> {
 			throw new Error('StoreOptions not provided');
 		}
 
-		storeOptions.response.clearCookie(name);
+		storeOptions.reply.clearCookie(name);
 	}
 }
