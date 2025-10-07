@@ -4,7 +4,7 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --turbopack --port 4040",
+		"dev": "next dev --turbopack --port 3000",
 		"build": "next build",
 		"start": "next start",
 		"lint": "eslint --max-warnings 0 .",
@@ -12,6 +12,7 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@auth0/nextjs-auth0": "4.10.0",
 		"@repo/ui": "workspace:*",
 		"@tailwindcss/postcss": "^4.1.13",
 		"next": "^15.5.0",

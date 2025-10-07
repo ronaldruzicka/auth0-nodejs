@@ -4,20 +4,20 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { env, resolvedPort } from './env.ts';
+import { env } from './env.ts';
 import { ALLOWED_ORIGINS, auth0, Auth0ExpressOptions } from './auth0.ts';
 import { hasSession } from './utils/has-session.ts';
 
 const config = {
-	appBaseUrl: env.BASE_URL, // e.g. http://localhost:4040
+	appBaseUrl: env.APP_BASE_URL,
 	clientId: env.AUTH0_CLIENT_ID,
 	clientSecret: env.AUTH0_CLIENT_SECRET,
 	domain: env.AUTH0_DOMAIN,
-	sessionSecret: env.SESSION_SECRET,
+	sessionSecret: env.AUTH0_SECRET,
 } satisfies Auth0ExpressOptions;
 
 const app = express();
-const port = resolvedPort();
+const port = 3003;
 
 app.listen(port, () => {
 	console.log(`Auth service listening on ${port} (env=${env.NODE_ENV ?? 'development'})`);

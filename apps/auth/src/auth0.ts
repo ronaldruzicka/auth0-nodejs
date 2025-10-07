@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import express from 'express';
-import { CookieTransactionStore, ServerClient, StatelessStateStore } from '@auth0/auth0-server-js';
+import { CookieTransactionStore, ServerClient } from '@auth0/auth0-server-js';
 import { StoreOptions } from './types.js';
 import { ExpressCookieHandler } from './store/express-cookie-handler.js';
+import { StatelessStateStore } from './store/stateless-state-store.js';
 
 export interface Auth0ExpressOptions {
 	domain: string;
@@ -40,9 +41,14 @@ export function auth0(options: Auth0ExpressOptions) {
 		stateStore: new StatelessStateStore(
 			{
 				secret: options.sessionSecret,
+				cookie: {
+					sameSite: 'lax',
+					secure: false,
+				},
 			},
 			new ExpressCookieHandler(),
 		),
+		stateIdentifier: 'christies__cookie',
 	});
 
 	const router = new express.Router();
