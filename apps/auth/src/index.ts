@@ -1,68 +1,43 @@
-import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
-import fastifyAuth0, { ALLOWED_ORIGINS, getReturnTo } from './auth0.js';
 import fastifyCookie from '@fastify/cookie';
 import cors from '@fastify/cors';
+import Fastify from 'fastify';
+import fastifyAuth0 from './auth0.js';
 
 const fastify = Fastify({
 	logger: false,
 });
 
-fastify.register(cors, {
-	origin: ALLOWED_ORIGINS,
+fastify.register(fastifyCookie);
+
+await fastify.register(cors, {
+	origin: ['http://localhost:3000'],
 	credentials: true,
 });
 
-fastify.register(fastifyCookie);
-
 fastify.register(fastifyAuth0, {
-	domain: process.env.AUTH0_DOMAIN as string,
+	appBaseUrl: process.env.APP_BASE_URL as string,
 	clientId: process.env.AUTH0_CLIENT_ID as string,
 	clientSecret: process.env.AUTH0_CLIENT_SECRET as string,
-	appBaseUrl: process.env.BASE_URL as string,
-	sessionSecret: process.env.SESSION_SECRET as string,
+	domain: process.env.AUTH0_DOMAIN as string,
+	sessionSecret: process.env.AUTH0_SECRET as string,
 });
 
 fastify.get('/', async (request, reply) => {
 	const user = await fastify.auth0Client!.getUser({ request, reply });
 
-	// return reply.viewAsync('index.ejs', { isLoggedIn: !!user, user: user });
-	return { isLoggedIn: !!user, user };
+	return reply.send({ isLoggedIn: !!user, user: user });
 });
 
-fastify.get('/public', async (request, reply) => {
-	const user = await fastify.auth0Client!.getUser({ request, reply });
-
-	return { isLoggedIn: !!user, user };
-});
-
-async function hasSessionPreHandler(request: FastifyRequest<QueryParams>, reply: FastifyReply) {
+fastify.get('/auth/session', async (request, reply) => {
 	const session = await fastify.auth0Client!.getSession({ request, reply });
 
-	if (!session) {
-		const returnTo = getReturnTo(request, { appBaseUrl: process.env.BASE_URL });
-
-		reply.redirect(`/auth/login?returnTo=${returnTo}`);
-	}
-}
-
-fastify.get(
-	'/private',
-	{
-		preHandler: hasSessionPreHandler,
-	},
-	async (request, reply) => {
-		const user = await fastify.auth0Client!.getUser({ request, reply });
-
-		return {
-			isLoggedIn: !!user,
-			user,
-		};
-	},
-);
+	return reply.send({ session });
+});
 
 const start = async () => {
 	try {
-		await fastify.listen({ port: 3000 });
+		await fastify.listen({ port: 3003 });
+		console.log('Server listening on http://localhost:3003');
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

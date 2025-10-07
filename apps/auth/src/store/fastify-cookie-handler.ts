@@ -1,5 +1,17 @@
 import { CookieHandler, CookieSerializeOptions } from '@auth0/auth0-server-js';
-import { StoreOptions } from '../types';
+import { StoreOptions } from '../types.js';
+
+const DOT_CHUNK_REGEX = new RegExp(/(.*)\.(\d+)$/);
+
+function toUnderscoreForm(name: string): string {
+	const [, base, index] = DOT_CHUNK_REGEX.exec(name) ?? [];
+
+	if (base && index) {
+		return `${base}__${index}`;
+	}
+
+	return name;
+}
 
 export class FastifyCookieHandler implements CookieHandler<StoreOptions> {
 	setCookie(
@@ -12,7 +24,11 @@ export class FastifyCookieHandler implements CookieHandler<StoreOptions> {
 			throw new Error('StoreOptions not provided');
 		}
 
-		storeOptions.reply.setCookie(name, value, options || {});
+		// christies__cookie.0 -> christies__cookie__0
+		const underscoreName = toUnderscoreForm(name);
+		console.log('💬 ~ FastifyCookieHandler ~ setCookie ~ underscoreName:', underscoreName);
+
+		storeOptions.reply.setCookie(underscoreName, value, options || {});
 	}
 
 	getCookie(name: string, storeOptions?: StoreOptions): string | undefined {

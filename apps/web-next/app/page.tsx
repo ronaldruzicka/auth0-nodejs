@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import { getSession } from '../lib/get-session';
+import { auth0 } from '../lib/auth0';
 
 export default async function Home() {
-	const session = await getSession();
+	const session = await auth0.getSession();
 
 	return (
 		<div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 font-sans text-slate-100">
@@ -35,7 +35,7 @@ export default async function Home() {
 							{JSON.stringify(session, null, 2)}
 						</pre>
 					</div>
-					{session.isAuthenticated && (
+					{session?.user && (
 						<div className="rounded-md border border-slate-700 bg-slate-900/40 p-4 text-left">
 							<h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
 								User Claims
